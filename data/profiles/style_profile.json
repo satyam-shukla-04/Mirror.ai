@@ -1,0 +1,32 @@
+{
+    "style_summary": "The writing style is formal, technical, and objective, indicating a professional and informative tone.",
+    "tone": "Informative, objective, and professional",
+    "formality": "Highly formal",
+    "sentence_structure": "Complex, with multiple clauses and technical terms",
+    "vocabulary": "Specialized, with technical terms and jargon related to AI and software development",
+    "common_phrases": [
+        "As a user, I want",
+        "So that",
+        "The system should",
+        "The goal is"
+    ],
+    "opening_style": "Direct and to the point, with a clear introduction to the product and its purpose",
+    "closing_style": "Concise and summary-like, with a focus on key takeaways and next steps",
+    "emoji_usage": "None",
+    "punctuation_style": "Standard, with proper use of commas, semicolons, and periods",
+    "writing_habits": [
+        "Using bullet points and numbered lists to organize information",
+        "Defining technical terms and acronyms",
+        "Providing examples and use cases to illustrate complex concepts"
+    ],
+    "dos_and_donts": [
+        "DO use clear and concise language",
+        "DO provide specific examples and use cases",
+        "DON'T use overly technical jargon or complex sentence structures without explanation"
+    ],
+    "few_shot_examples": [
+        "The system should be able to learn a user's communication style from their writing and speaking samples.",
+        "The goal is to generate text and voice outputs that resemble the user's style.",
+        "The product should provide a personalized AI communication engine capable of learning and replicating a user's style."
+    ]
+}
