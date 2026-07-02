@@ -21,37 +21,21 @@ AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 print("Documents:", DOCUMENTS_DIR)
 print("Audio:", AUDIO_DIR)
 
+from backend.services.upload_service import process_document
+
 async def save_document(e):
 
-    extension = Path(e.file.name).suffix
+    content = await e.file.read()
 
-    file_path = DOCUMENTS_DIR / f"writing_reference{extension}"
-
-    await e.file.save(file_path)
-
-    text = extract_text(
-            str(file_path)
-        )
-
-    save_extracted_text(text)
-
-
-
-    profile = analyze_style_with_groq(text)
-
-    profile = profile.replace("```json", "")
-    profile = profile.replace("```", "")
-    profile = profile.strip()
-
-    profile = json.loads(profile)
-
-    save_profile(profile)
-    print(f"Saved: {file_path}")
+    result = process_document(
+        e.file.name,
+        content
+    )
 
     ui.notify(
-        f"Document uploaded: {e.file.name}",
+        result["message"],
         type="positive"
-            )
+    )
 async def save_audio(e):
 
     extension = Path(e.file.name).suffix

@@ -1,29 +1,80 @@
 import json
-from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-PROFILE_DIR = BASE_DIR / "data" / "profiles"
+def build_prompt(
+    prompt: str,
+    profile: dict,
+    examples: list
+):
+    profile_json = json.dumps(profile, indent=2)
 
-PROFILE_DIR.mkdir(
-    parents=True,
-    exist_ok=True
-)
+    examples_text = ""
 
-def save_profile(profile):
+    for i, example in enumerate(examples, start=1):
+        examples_text += f"""
 
-    file_path = PROFILE_DIR / "style_profile.json"
+======================
+WRITING EXAMPLE {i}
+======================
 
-    with open(
-        file_path,
-        "w",
-        encoding="utf-8"
-    ) as f:
+{example}
 
-        #profile = json.loads(profile)
+"""
 
-        json.dump(profile, f, indent=4)
+    return f"""
+You are Mirror Persona AI.
 
-    print("Profile Saved:", file_path)
+Your task is to imitate the author's writing style.
 
-    return file_path
+Do NOT copy sentences.
+
+Generate NEW content.
+
+------------------------------------------
+
+WRITING DNA
+
+{profile_json}
+
+------------------------------------------
+
+REAL WRITING EXAMPLES
+
+{examples_text}
+
+------------------------------------------
+
+RULES
+
+- Match sentence length.
+
+- Match paragraph length.
+
+- Match vocabulary.
+
+- Match punctuation.
+
+- Match transitions.
+
+- Match writing habits.
+
+- Match confidence.
+
+- Match personality.
+
+- Do not sound like ChatGPT.
+
+- Do not sound like Gemini.
+
+- Do not explain anything.
+
+------------------------------------------
+
+USER REQUEST
+
+{prompt}
+
+------------------------------------------
+
+Return ONLY the generated writing.
+"""

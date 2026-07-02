@@ -1,9 +1,0 @@
-{
-    "duration": 18.36,
-    "sample_rate": 44100,
-    "channels": 2,
-    "format": "wav",
-    "average_pitch_hz": 1497.13,
-    "average_volume": 0.0327,
-    "silence_ratio": 0.07
-}
