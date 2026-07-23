@@ -1,169 +1,135 @@
 from nicegui import ui
-import json
-from backend.services.evaluation import evaluate_persona
 
 from components.sidebar import sidebar
 from components.navbar import navbar
+
+from frontend.services.evaluation_service import evaluate_text
+from frontend.utils.generation import get_generated_text_id
 
 
 @ui.page("/evaluation")
 def evaluation_page():
 
     sidebar()
-    navbar("Persona Evaluation")
-
-    report = evaluate_persona()
+    navbar("Evaluation")
 
     with ui.column().classes("p-8 w-full gap-6"):
 
-        ui.label("Mirror Persona Evaluation").classes(
+        ui.label(
+            "Mirror AI Evaluation"
+        ).classes(
             "text-3xl font-bold"
         )
 
         ui.label(
-            "Check whether your writing and voice persona are ready."
+            "Evaluate how closely the generated text matches your writing style."
         ).classes(
             "text-gray-500"
         )
 
-        # -----------------------------
-        # Upload Status
-        # -----------------------------
+        score_label = ui.label("").classes(
+            "text-5xl font-bold text-blue"
+        )
 
-        with ui.card().classes("w-full p-4"):
+        metrics = ui.column().classes("gap-2")
 
-            ui.label("Upload Status").classes(
-                "text-xl font-bold"
+        strengths = ui.column().classes("gap-1")
+
+        weaknesses = ui.column().classes("gap-1")
+
+        suggestions = ui.column().classes("gap-1")
+
+        def run_evaluation():
+
+            generated_text_id = get_generated_text_id()
+
+            if generated_text_id is None:
+
+                ui.notify(
+                    "Generate some text first.",
+                    color="warning"
+                )
+
+                return
+
+            response = evaluate_text(
+                generated_text_id
             )
 
-            ui.label(
-                f"Writing Reference : {'✅ Uploaded' if report['writing_reference'] else '❌ Missing'}"
+            if not response.ok:
+
+                ui.notify(
+                    "Evaluation failed.",
+                    color="negative"
+                )
+
+                return
+
+            data = response.json()["evaluation"]
+
+            score_label.set_text(
+                f"{data['overall_score']} / 100"
             )
 
-            ui.label(
-                f"Voice Reference : {'✅ Uploaded' if report['voice_reference'] else '❌ Missing'}"
-            )
+            metrics.clear()
 
-            ui.label(
-                f"Style Profile : {'✅ Generated' if report['style_profile'] else '❌ Missing'}"
-            )
+            strengths.clear()
 
-            ui.label(
-                f"Voice Profile : {'✅ Generated' if report['voice_profile'] else '❌ Missing'}"
-            )
+            weaknesses.clear()
 
-        # -----------------------------
-        # Writing Profile
-        # -----------------------------
+            suggestions.clear()
 
-        if report["style"]:
+            with metrics:
 
-            style = report["style"]
-            if isinstance(style, str):
-                style = json.loads(style)
+                ui.label(f"Tone : {data['tone']}")
 
-            with ui.card().classes("w-full p-4"):
+                ui.label(f"Vocabulary : {data['vocabulary']}")
 
-                ui.label("Writing Style").classes(
+                ui.label(f"Sentence Structure : {data['sentence_structure']}")
+
+                ui.label(f"Paragraph Flow : {data['paragraph_flow']}")
+
+                ui.label(f"Writing Habits : {data['writing_habits']}")
+
+                ui.label(f"Human Likeness : {data['human_likeness']}")
+
+            with strengths:
+
+                ui.label("Strengths").classes(
                     "text-xl font-bold"
                 )
 
-                ui.label(f"Tone : {style.get('tone', 'N/A')}")
+                for item in data["strengths"]:
 
-                ui.label(f"Formality : {style.get('formality', 'N/A')}")
+                    ui.label(f"✓ {item}")
 
-                ui.label(f"Directness : {style.get('directness', 'N/A')}")
+            with weaknesses:
 
-                ui.label(f"Verbosity : {style.get('verbosity', 'N/A')}")
-
-                ui.label(f"Technicality : {style.get('technicality', 'N/A')}")
-
-                patterns = style.get("writing_patterns", [])
-
-                if patterns:
-
-                    ui.label("Writing Patterns").classes(
-                        "font-bold mt-2"
-                    )
-
-                    for pattern in patterns:
-
-                        ui.label(f"• {pattern}")
-
-        # -----------------------------
-        # Voice Profile
-        # -----------------------------
-
-        if report["voice"]:
-
-            voice = report["voice"]
-            if isinstance(style, str):
-                style = json.loads(style)
-
-            with ui.card().classes("w-full p-4"):
-
-                ui.label("Voice Profile").classes(
+                ui.label("Weaknesses").classes(
                     "text-xl font-bold"
                 )
 
-                ui.label(
-                    f"Duration : {voice.get('duration', 'N/A')} sec"
+                for item in data["weaknesses"]:
+
+                    ui.label(f"✗ {item}")
+
+            with suggestions:
+
+                ui.label("Suggestions").classes(
+                    "text-xl font-bold"
                 )
 
-                ui.label(
-                    f"Sample Rate : {voice.get('sample_rate', 'N/A')} Hz"
-                )
+                for item in data["suggestions"]:
 
-                ui.label(
-                    f"Channels : {voice.get('channels', 'N/A')}"
-                )
+                    ui.label(f"• {item}")
 
-                ui.label(
-                    f"Format : {voice.get('format', 'N/A')}"
-                )
-
-                ui.label(
-                    f"Average Pitch : {voice.get('average_pitch_hz', 'N/A')} Hz"
-                )
-
-                ui.label(
-                    f"Average Volume : {voice.get('average_volume', 'N/A')}"
-                )
-
-                ui.label(
-                    f"Silence Ratio : {voice.get('silence_ratio', 'N/A')}"
-                )
-
-        # -----------------------------
-        # Overall Status
-        # -----------------------------
-
-        with ui.card().classes("w-full p-4"):
-
-            ui.label("Overall Status").classes(
-                "text-xl font-bold"
+            ui.notify(
+                "Evaluation completed.",
+                color="positive"
             )
 
-            if report["persona_ready"]:
-
-                ui.label(
-                    "🟢 Persona Ready"
-                ).classes(
-                    "text-green text-2xl font-bold"
-                )
-
-                ui.label(
-                    "Mirror AI has successfully learned your writing and voice profile."
-                )
-
-            else:
-
-                ui.label(
-                    "🔴 Persona Incomplete"
-                ).classes(
-                    "text-red text-2xl font-bold"
-                )
-
-                ui.label(
-                    "Please upload both a writing reference and a voice reference."
-                )
+        ui.button(
+            "Evaluate",
+            icon="analytics",
+            on_click=run_evaluation
+        )

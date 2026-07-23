@@ -8,3 +8,4 @@ class GenerateRequest(BaseModel):
 
 class GenerateResponse(APIResponse):
     generated_text: str
+    generated_text_id: int

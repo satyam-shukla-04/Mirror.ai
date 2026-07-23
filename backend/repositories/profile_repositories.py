@@ -5,7 +5,7 @@ from backend.repositories.writing_profile_repository import (
     WritingProfileRepository
 )
 
-
+from backend.repositories.voice_profile_repository import VoiceProfileRepository
 class ProfileRepository:
 
     @staticmethod
@@ -45,3 +45,18 @@ class ProfileRepository:
             )
 
         return document.extracted_text
+    @staticmethod
+    def get_voice_profile(
+    db,
+    user_id: int
+):
+
+     profile = VoiceProfileRepository.get_latest(
+        db=db,
+        user_id=user_id
+    )
+
+     if profile is None:
+        raise Exception("No voice profile found.")
+
+     return profile

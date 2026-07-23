@@ -2,7 +2,6 @@ import os
 
 from dotenv import load_dotenv
 from google import genai
-
 from backend.services.profile_loader import load_profile
 from backend.services.prompt_builder import build_prompt
 from backend.repositories.generated_text_repository import (
@@ -42,13 +41,16 @@ def generate_text(
         contents=full_prompt
     )
 
-    generated_text = response.text.strip()
+    generated_content = response.text.strip()
 
-    GeneratedTextRepository.create(
+    generated = GeneratedTextRepository.create(
         db=db,
         user_id=user_id,
         prompt=prompt,
-        generated_text=generated_text
-    )
+        generated_text=generated_content
+)
 
-    return generated_text
+    return {
+        "generated_text": generated.generated_text,
+        "generated_text_id": generated.id
+}

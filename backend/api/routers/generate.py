@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-
 from backend.api.schemas.generate import (
     GenerateRequest,
     GenerateResponse
@@ -32,7 +31,8 @@ def generate(
     )
 
     return GenerateResponse(
-    success=True,
-    message="Text generated successfully.",
-    generated_text=result
+        success=True,
+        message="Text generated successfully.",
+        generated_text=result["generated_text"],
+        generated_text_id=result["generated_text_id"]
 )
