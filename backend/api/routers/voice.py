@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-
+from backend.repositories.generated_voice_repository import GeneratedVoiceRepository
 from backend.database.session import get_db
 from backend.database.models.user import User
 from backend.api.dependecies.auth import get_current_user
@@ -42,3 +42,30 @@ def generate(
     message="Voice generated successfully.",
     audio_path=f"/uploads/generated_voice/{filename}",
 ) 
+
+
+@router.get("/history")
+def history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+
+    voices = GeneratedVoiceRepository.get_history(
+        db=db,
+        user_id=current_user.id,
+    )
+
+    result = []
+
+    for voice in voices:
+
+        filename = Path(voice.audio_path).name
+
+        result.append({
+            "id": voice.id,
+            "audio_path": f"/uploads/generated_voice/{filename}",
+            "created_at": voice.created_at,
+            "generated_text_id": voice.generated_text_id,
+        })
+
+    return result

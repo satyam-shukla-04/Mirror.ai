@@ -72,3 +72,13 @@ class GeneratedVoiceRepository:
             )
             .first()
         )
+
+
+    @staticmethod
+    def get_history(db: Session, user_id: int):
+        return (
+        db.query(GeneratedVoice)
+        .filter(GeneratedVoice.user_id == user_id)
+        .order_by(GeneratedVoice.created_at.desc())
+        .all()
+    )

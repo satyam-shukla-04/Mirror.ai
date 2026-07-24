@@ -26,3 +26,13 @@ def generate_voice(generated_text_id: int):
     print(response.text)
 
     return response
+
+
+def get_voice_history():
+
+    token = get_token()
+
+    return requests.get(
+        f"{BASE_URL}/voice/history",
+        headers=get_headers(token),
+    )
