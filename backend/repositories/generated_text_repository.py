@@ -92,3 +92,23 @@ class GeneratedTextRepository:
             db.commit()
 
         return text
+
+
+def create_generated_text(
+    self,
+    user_id: int,
+    prompt: str,
+    generated_text: str,
+):
+
+    text = GeneratedText(
+        user_id=user_id,
+        prompt=prompt,
+        generated_text=generated_text,
+    )
+
+    self.db.add(text)
+    self.db.commit()
+    self.db.refresh(text)
+
+    return text

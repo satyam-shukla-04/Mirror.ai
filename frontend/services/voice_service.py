@@ -2,24 +2,31 @@ import requests
 
 from frontend.services.api import (
     BASE_URL,
-    get_headers
+    get_headers,
 )
 
 from frontend.utils.session import get_token
 
 
-def generate_voice(generated_text_id: int):
-
-    print("Generated Text ID:", generated_text_id)
+def generate_voice(
+    generated_text_id=None,
+    custom_text=None,
+):
 
     token = get_token()
+
+    payload = {}
+
+    if generated_text_id is not None:
+        payload["generated_text_id"] = generated_text_id
+
+    if custom_text:
+        payload["custom_text"] = custom_text
 
     response = requests.post(
         f"{BASE_URL}/voice/generate",
         headers=get_headers(token),
-        json={
-            "generated_text_id": generated_text_id
-        }
+        json=payload,
     )
 
     print(response.status_code)

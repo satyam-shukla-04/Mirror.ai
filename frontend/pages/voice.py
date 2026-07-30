@@ -24,11 +24,68 @@ def voice_page():
         )
 
         ui.label(
-            "Generate speech using your cloned voice."
+        "Generate speech using your cloned voice."
+        ).classes(
+         "text-gray-500"
+        )
+
+        voice_source = ui.radio(
+            {
+                "generated": "Use Generated Text",
+                "custom": "Enter Custom Text",
+            },
+            value="generated",
+        ).props("inline")
+
+        generated_container = ui.column().classes("w-full")
+        custom_container = ui.column().classes("w-full")
+
+
+
+        # -------------------------
+        # Voice Source
+        # -------------------------
+
+        voice_source = ui.radio(
+            {
+                "generated": "Use Generated Text",
+                "custom": "Enter Custom Text",
+            },
+            value="generated",
+        ).classes("mb-4")
+
+    with generated_container:
+
+        ui.label(
+            "Latest generated text will be used."
         ).classes(
             "text-gray-500"
         )
 
+    with custom_container:
+
+        custom_text = ui.textarea(
+            label="Custom Text",
+            placeholder="Type anything you want your cloned voice to speak..."
+        ).classes("w-full")
+
+        def update_source():
+
+            generated_container.visible = (
+                voice_source.value == "generated"
+            )
+
+            custom_container.visible = (
+                voice_source.value == "custom"
+            )
+
+
+        voice_source.on(
+            "update:model-value",
+            lambda _: update_source()
+        )
+
+        update_source()
         # -------------------------
         # Current Generated Voice
         # -------------------------
@@ -120,34 +177,54 @@ def voice_page():
 
         async def handle_generate():
 
-            generated_text_id = get_generated_text_id()
-
-            if generated_text_id is None:
-
-                ui.notify(
-                    "Please generate text first.",
-                    color="warning",
-                )
-
-                return
-
             ui.notify(
                 "Generating voice...",
                 color="primary",
             )
 
-            response = generate_voice(
-                generated_text_id
-            )
+            if voice_source.value == "generated":
+
+                generated_text_id = get_generated_text_id()
+
+                if generated_text_id is None:
+
+                    ui.notify(
+                        "Please generate text first.",
+                        color="warning",
+                    )
+
+                    return
+
+                response = generate_voice(
+                    generated_text_id=generated_text_id
+                )
+
+            else:
+
+                if not custom_text.value.strip():
+
+                    ui.notify(
+                        "Please enter some text.",
+                        color="warning",
+                    )
+
+                    return
+
+                response = generate_voice(
+                    custom_text=custom_text.value
+                )
 
             if response.status_code != 200:
 
                 try:
+
                     ui.notify(
                         response.json()["detail"],
                         color="negative",
                     )
+
                 except Exception:
+
                     ui.notify(
                         response.text,
                         color="negative",
@@ -159,26 +236,21 @@ def voice_page():
 
             audio_url = BASE_URL + data["audio_path"]
 
-            print(audio_url)
-
-            # Current Voice
             audio_player.props(
                 f'src="{audio_url}"'
             )
 
             audio_player.update()
 
-            # Download Button
             download_link.set_target(audio_url)
             download_link.visible = True
 
-            # Refresh History
             load_history()
 
             ui.notify(
                 "Voice generated successfully!",
                 color="positive",
-            )
+            )       
 
         # -------------------------
         # Buttons

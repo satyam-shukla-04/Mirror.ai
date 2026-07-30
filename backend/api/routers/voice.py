@@ -32,9 +32,9 @@ def generate(
     voice = generate_voice(
         db=db,
         user_id=current_user.id,
-        generated_text_id=request.generated_text_id
+        generated_text_id=request.generated_text_id,
+        custom_text=request.custom_text,
     )
-
     filename = Path(voice.audio_path).name
 
     return VoiceGenerateResponse(

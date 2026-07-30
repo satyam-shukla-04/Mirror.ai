@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from datetime import datetime
+from typing import Optional
 
 from backend.services.omnivoice_service import OmniVoiceService
 
@@ -16,15 +17,18 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 def generate_voice(
     db,
     user_id: int,
-    generated_text_id: int,
+    generated_text_id: Optional[int] = None,
+    custom_text: Optional[str] = None,
 ):
     """
-    Generate cloned speech from a previously generated text.
+    Generate cloned speech using either:
+    1. Previously generated text
+    2. Custom text entered by the user
     """
 
-    # -------------------------------
+    # ---------------------------------
     # Load latest voice reference
-    # -------------------------------
+    # ---------------------------------
 
     voice_profile = ProfileRepository.get_voice_profile(
         db=db,
@@ -39,21 +43,38 @@ def generate_voice(
     if not os.path.exists(reference_audio):
         raise Exception("Reference audio not found.")
 
-    # -------------------------------
-    # Load generated text
-    # -------------------------------
+    # ---------------------------------
+    # Decide which text to use
+    # ---------------------------------
 
-    generated = GeneratedTextRepository.get_by_id(
-        db=db,
-        text_id=generated_text_id
-    )
+    if generated_text_id:
 
-    if generated is None:
-        raise Exception("Generated text not found.")
+        generated = GeneratedTextRepository.get_by_id(
+            db=db,
+            text_id=generated_text_id
+        )
 
-    # -------------------------------
+        if generated is None:
+            raise Exception("Generated text not found.")
+
+    elif custom_text:
+
+        generated = GeneratedTextRepository.create_generated_text(
+            db=db,
+            user_id=user_id,
+            prompt="Custom Voice Input",
+            generated_text=custom_text,
+        )
+
+    else:
+
+        raise Exception(
+            "Please provide generated_text_id or custom_text."
+        )
+
+    # ---------------------------------
     # Output filename
-    # -------------------------------
+    # ---------------------------------
 
     filename = (
         f"user_{user_id}_"
@@ -62,9 +83,9 @@ def generate_voice(
 
     output_path = UPLOAD_DIR / filename
 
-    # -------------------------------
+    # ---------------------------------
     # Generate voice
-    # -------------------------------
+    # ---------------------------------
 
     OmniVoiceService.generate(
         text=generated.generated_text,
@@ -72,9 +93,9 @@ def generate_voice(
         output_path=str(output_path),
     )
 
-    # -------------------------------
-    # Save to database
-    # -------------------------------
+    # ---------------------------------
+    # Save generated voice
+    # ---------------------------------
 
     voice = GeneratedVoiceRepository.create(
         db=db,
