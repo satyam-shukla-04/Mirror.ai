@@ -22,17 +22,17 @@ def generate_voice(
 ):
     """
     Generate cloned speech using either:
-    1. Previously generated text
+    1. Existing generated text
     2. Custom text entered by the user
     """
 
     # ---------------------------------
-    # Load latest voice reference
+    # Load latest voice profile
     # ---------------------------------
 
     voice_profile = ProfileRepository.get_voice_profile(
         db=db,
-        user_id=user_id
+        user_id=user_id,
     )
 
     if voice_profile is None:
@@ -47,11 +47,11 @@ def generate_voice(
     # Decide which text to use
     # ---------------------------------
 
-    if generated_text_id:
+    if generated_text_id is not None:
 
         generated = GeneratedTextRepository.get_by_id(
             db=db,
-            text_id=generated_text_id
+            text_id=generated_text_id,
         )
 
         if generated is None:
@@ -59,7 +59,7 @@ def generate_voice(
 
     elif custom_text:
 
-        generated = GeneratedTextRepository.create_generated_text(
+        generated = GeneratedTextRepository.create(
             db=db,
             user_id=user_id,
             prompt="Custom Voice Input",
@@ -84,7 +84,7 @@ def generate_voice(
     output_path = UPLOAD_DIR / filename
 
     # ---------------------------------
-    # Generate voice
+    # Generate cloned voice
     # ---------------------------------
 
     OmniVoiceService.generate(

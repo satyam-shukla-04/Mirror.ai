@@ -94,8 +94,9 @@ class GeneratedTextRepository:
         return text
 
 
+@staticmethod
 def create_generated_text(
-    self,
+    db: Session,
     user_id: int,
     prompt: str,
     generated_text: str,
@@ -107,8 +108,8 @@ def create_generated_text(
         generated_text=generated_text,
     )
 
-    self.db.add(text)
-    self.db.commit()
-    self.db.refresh(text)
+    db.add(text)
+    db.commit()
+    db.refresh(text)
 
     return text
