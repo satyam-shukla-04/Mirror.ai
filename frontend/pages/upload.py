@@ -8,8 +8,8 @@ from frontend.services.upload_service import (
     upload_voice,
 )
 
-from components.sidebar import sidebar
-from components.navbar import navbar
+from frontend.components.sidebar import sidebar
+from frontend.components.navbar import navbar
 
 
 def on_document_upload(event):

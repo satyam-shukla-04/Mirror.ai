@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from backend.api.routers.dasboard import router as dashboard_
 from backend.api.routers import generate
 from backend.api.routers import upload
 from backend.api.routers import auth

@@ -1,6 +1,6 @@
 from nicegui import ui
-from components.sidebar import sidebar
-from components.navbar import navbar
+from frontend.components.sidebar import sidebar
+from frontend.components.navbar import navbar
 
 @ui.page('/analysis')
 def analysis():

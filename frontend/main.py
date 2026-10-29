@@ -1,41 +1,34 @@
-import sys
-from pathlib import Path
-
-ROOT_DIR = Path(__file__).resolve().parent.parent
-
-sys.path.append(str(ROOT_DIR))
 
 from nicegui import ui
-import pages.login
-import pages.register
-import pages.dashboard
-try:
-    import pages.upload
-    print("✅ upload loaded")
-except Exception as e:
-    print("❌ upload", e)
 
-try:
-    import pages.analysis
-    print("✅ analysis loaded")
-except Exception as e:
-    print("❌ analysis", e)
+# Import core pages
+import frontend.pages.login
+import frontend.pages.register
+import frontend.pages.dashboard
 
-try:
-    import pages.generate
-    print("✅ generate loaded")
-except Exception as e:
-    print("❌ generate", e)
 
-try:
-    import pages.voice
-    print("✅ voice loaded")
-except Exception as e:
-    print("❌ voice", e)
+# Import remaining pages and show any import errors
+def load_page(module_name: str, page_name: str) -> None:
+    try:
+        __import__(module_name)
+        print(f"✅ {page_name} page loaded")
+    except Exception as e:
+        print(f"❌ Failed to load {page_name} page: {e}")
+        raise
 
-try:
-    import pages.evalution
-    print("✅ evaluation loaded")
-except Exception as e:
-    print("❌ evaluation", e)
-ui.run()
+
+load_page("frontend.pages.upload", "Upload")
+load_page("frontend.pages.analysis", "Analysis")
+load_page("frontend.pages.generate", "Generate")
+load_page("frontend.pages.voice", "Voice")
+load_page("frontend.pages.evalution", "Evaluation")
+
+
+# Start NiceGUI
+if __name__ in {"__main__", "__mp_main__"}:
+    ui.run(
+        host="127.0.0.1",
+        port=8080,
+        reload=False,
+        title="Mirror Persona AI",
+    )

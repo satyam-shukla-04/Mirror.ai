@@ -1,7 +1,7 @@
 from nicegui import ui
 
-from components.sidebar import sidebar
-from components.navbar import navbar
+from frontend.components.sidebar import sidebar
+from frontend.components.navbar import navbar
 
 from frontend.services.evaluation_service import evaluate_text
 from frontend.utils.generation import get_generated_text_id

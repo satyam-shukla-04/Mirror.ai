@@ -1,12 +1,13 @@
 from nicegui import ui
 
-from components.sidebar import sidebar
-from components.navbar import navbar
+from frontend.components.sidebar import sidebar
+from frontend.components.navbar import navbar
 
 from frontend.services.api import BASE_URL
 from frontend.services.voice_service import (
     generate_voice,
     get_voice_history,
+    get_reference_voice,
 )
 from frontend.utils.generation import get_generated_text_id
 
@@ -17,101 +18,159 @@ def voice_page():
     sidebar()
     navbar("Voice Generation")
 
-    with ui.column().classes("p-8 w-full gap-4"):
+    with ui.column().classes("p-8 w-full gap-6"):
+
+        # ======================================================
+        # Header
+        # ======================================================
 
         ui.label("Voice Generation").classes(
             "text-3xl font-bold"
         )
 
         ui.label(
-        "Generate speech using your cloned voice."
-        ).classes(
-         "text-gray-500"
-        )
-
-        voice_source = ui.radio(
-            {
-                "generated": "Use Generated Text",
-                "custom": "Enter Custom Text",
-            },
-            value="generated",
-        ).props("inline")
-
-        generated_container = ui.column().classes("w-full")
-        custom_container = ui.column().classes("w-full")
-
-
-
-        # -------------------------
-        # Voice Source
-        # -------------------------
-
-        voice_source = ui.radio(
-            {
-                "generated": "Use Generated Text",
-                "custom": "Enter Custom Text",
-            },
-            value="generated",
-        ).classes("mb-4")
-
-    with generated_container:
-
-        ui.label(
-            "Latest generated text will be used."
+            "Generate natural speech using your cloned voice."
         ).classes(
             "text-gray-500"
         )
 
-    with custom_container:
+        ui.separator()
 
-        custom_text = ui.textarea(
-            label="Custom Text",
-            placeholder="Type anything you want your cloned voice to speak..."
-        ).classes("w-full")
+        # ======================================================
+        # Input Card
+        # ======================================================
 
-        def update_source():
+        with ui.card().classes("w-full p-6"):
 
-            generated_container.visible = (
-                voice_source.value == "generated"
+            ui.label(
+                "Enter Custom Text"
+            ).classes(
+                "text-xl font-semibold"
             )
 
-            custom_container.visible = (
-                voice_source.value == "custom"
+            ui.label(
+                "Leave this empty to automatically use your latest generated text."
+            ).classes(
+                "text-gray-500 text-sm"
             )
 
+            custom_text = ui.textarea(
+                placeholder="Type anything you want your cloned voice to speak..."
+            ).classes("w-full")
 
-        voice_source.on(
-            "update:model-value",
-            lambda _: update_source()
+            ui.separator()
+
+            ui.label(
+                "Latest Generated Text"
+            ).classes(
+                "text-lg font-semibold"
+            )
+
+            latest_text = ui.label(
+                "Latest generated text will be used automatically if the textbox is empty."
+            ).classes(
+                "text-gray-600"
+            )
+
+        # ======================================================
+        # Reference Voice
+        # ======================================================
+
+        with ui.card().classes("w-full p-6"):
+
+            ui.label(
+                "Reference Voice"
+            ).classes(
+                "text-xl font-semibold"
+            )
+
+            ui.label(
+                "This is your uploaded voice profile."
+            ).classes(
+                "text-gray-500 text-sm"
+            )
+
+            reference_player = ui.audio("").classes("w-full")
+
+        # ======================================================
+        # Generated Voice
+        # ======================================================
+
+        with ui.card().classes("w-full p-6"):
+
+            ui.label(
+                "Generated Voice"
+            ).classes(
+                "text-xl font-semibold"
+            )
+
+            generated_player = ui.audio("").classes("w-full")
+
+            download_link = ui.link(
+                "⬇ Download Generated Voice",
+                "#",
+            )
+
+            download_link.visible = False
+
+        # ======================================================
+        # Generate Button
+        # ======================================================
+
+        generate_btn = ui.button(
+            "Generate Voice",
+            icon="graphic_eq",
+        ).classes(
+            "w-52"
         )
 
-        update_source()
-        # -------------------------
-        # Current Generated Voice
-        # -------------------------
+        ui.separator()
 
-        ui.label("Current Voice").classes(
-            "text-xl font-bold mt-4"
+        # ======================================================
+        # History
+        # ======================================================
+
+        ui.label(
+            "Voice History"
+        ).classes(
+            "text-2xl font-bold"
         )
 
-        audio_player = ui.audio("").classes("w-full")
-
-        download_link = ui.link(
-            "⬇ Download Voice",
-            "#"
+        history_column = ui.column().classes(
+            "w-full gap-4"
         )
 
-        download_link.visible = False
+        # ======================================================
+        # Helper Functions
+        # ======================================================
 
-        # -------------------------
-        # Voice History Container
-        # -------------------------
+        def clear_generated():
 
-        history_column = ui.column().classes("w-full mt-8")
+            generated_player.props('src=""')
+            generated_player.update()
 
-        # -------------------------
-        # Load Voice History
-        # -------------------------
+            download_link.visible = False
+            download_link.update()
+
+        def load_reference_voice():
+
+            try:
+
+                response = get_reference_voice()
+
+                if response.status_code != 200:
+                    return
+
+                data = response.json()
+
+                reference_player.props(
+                    f'src="{BASE_URL}{data["audio_path"]}"'
+                )
+
+                reference_player.update()
+
+            except Exception as e:
+                print("Failed to load reference voice:", e)
 
         def load_history():
 
@@ -126,18 +185,10 @@ def voice_page():
 
             with history_column:
 
-                ui.separator()
-
-                ui.label(
-                    "Voice History"
-                ).classes(
-                    "text-2xl font-bold"
-                )
-
                 if not voices:
 
                     ui.label(
-                        "No generated voices yet."
+                        "No generated voices available."
                     ).classes(
                         "text-gray-500"
                     )
@@ -148,17 +199,20 @@ def voice_page():
 
                     audio_url = BASE_URL + voice["audio_path"]
 
-                    with ui.card().classes("w-full"):
+                    with ui.card().classes("w-full p-4"):
 
                         ui.label(
-                            f"Generated At: {voice['created_at']}"
+                            f"Generated: {voice['created_at']}"
                         ).classes(
                             "font-semibold"
                         )
 
                         if voice.get("prompt"):
+
                             ui.label(
                                 f"Prompt: {voice['prompt']}"
+                            ).classes(
+                                "text-gray-500"
                             )
 
                         ui.audio(audio_url).classes("w-full")
@@ -168,51 +222,42 @@ def voice_page():
                             audio_url,
                         )
 
-        # Load history when page opens
-        load_history()
-
-        # -------------------------
-        # Generate Voice
-        # -------------------------
-
         async def handle_generate():
+
+            generate_btn.disable()
 
             ui.notify(
                 "Generating voice...",
                 color="primary",
             )
 
-            if voice_source.value == "generated":
+            clear_generated()
+
+            if custom_text.value.strip():
+
+                response = generate_voice(
+                    custom_text=custom_text.value.strip()
+                )
+
+            else:
 
                 generated_text_id = get_generated_text_id()
 
                 if generated_text_id is None:
 
                     ui.notify(
-                        "Please generate text first.",
+                        "Generate text first or enter custom text.",
                         color="warning",
                     )
 
+                    generate_btn.enable()
                     return
 
                 response = generate_voice(
                     generated_text_id=generated_text_id
                 )
 
-            else:
-
-                if not custom_text.value.strip():
-
-                    ui.notify(
-                        "Please enter some text.",
-                        color="warning",
-                    )
-
-                    return
-
-                response = generate_voice(
-                    custom_text=custom_text.value
-                )
+            generate_btn.enable()
 
             if response.status_code != 200:
 
@@ -236,46 +281,29 @@ def voice_page():
 
             audio_url = BASE_URL + data["audio_path"]
 
-            audio_player.props(
+            generated_player.props(
                 f'src="{audio_url}"'
             )
 
-            audio_player.update()
+            generated_player.update()
 
             download_link.set_target(audio_url)
+
             download_link.visible = True
+            download_link.update()
 
             load_history()
 
             ui.notify(
                 "Voice generated successfully!",
                 color="positive",
-            )       
-
-        # -------------------------
-        # Buttons
-        # -------------------------
-
-        with ui.row():
-
-            ui.button(
-                "Generate Voice",
-                icon="graphic_eq",
-                on_click=handle_generate,
             )
 
-            ui.button(
-                "Refresh History",
-                icon="refresh",
-                on_click=load_history,
-            )
+        # ======================================================
+        # Initialize
+        # ======================================================
 
-            ui.button(
-                "Clear",
-                icon="delete",
-                on_click=lambda: (
-                    audio_player.props('src=""'),
-                    audio_player.update(),
-                    setattr(download_link, "visible", False),
-                ),
-            )
+        generate_btn.on_click(handle_generate)
+
+        load_reference_voice()
+        load_history()

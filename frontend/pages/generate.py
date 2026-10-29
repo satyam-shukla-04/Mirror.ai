@@ -1,7 +1,7 @@
 from nicegui import ui
 
-from components.sidebar import sidebar
-from components.navbar import navbar
+from frontend.components.sidebar import sidebar
+from frontend.components.navbar import navbar
 
 from frontend.services.generate_service import generate_text
 from frontend.services.voice_service import generate_voice

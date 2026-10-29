@@ -43,3 +43,13 @@ def get_voice_history():
         f"{BASE_URL}/voice/history",
         headers=get_headers(token),
     )
+
+
+def get_reference_voice():
+
+    token = get_token()
+
+    return requests.get(
+        f"{BASE_URL}/upload/voice/latest",
+        headers=get_headers(token),
+    )
